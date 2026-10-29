@@ -305,6 +305,14 @@
             }
         }
 
+        function formatDateFR(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            const [y, m, d] = parts;
+            return `${d}/${m}/${y}`;
+        }
+
         function toggleFilter(id) {
             if (id === 'all') {
                 state.selectedAccounts = ['all'];
@@ -326,7 +334,6 @@
             return state.transactions.filter(t => state.selectedAccounts.includes(t.accountId));
         }
 
-        // Teste si une transaction s'applique à un mois donné (format YYYY-MM)
         function isTxActiveInMonth(tx, year, month) {
             const monthStart = new Date(year, month, 1);
             const monthEnd = new Date(year, month + 1, 0);
@@ -356,7 +363,7 @@
                 return txStart.getMonth() === month && year >= txStart.getFullYear();
             }
 
-            return true; // monthly
+            return true;
         }
 
         function render() {
@@ -432,12 +439,12 @@
                 tbody.innerHTML = filteredTxs.map(t => {
                     const acc = state.accounts.find(a => a.id === t.accountId);
                     const isInc = t.type === 'income';
-                    const datesStr = `${t.startDate ? t.startDate.substring(2) : ''}${t.endDate ? ' ➔ ' + t.endDate.substring(2) : ''}`;
+                    const datesStr = `${formatDateFR(t.startDate)}${t.endDate ? ' ➔ ' + formatDateFR(t.endDate) : ''}`;
                     return `
                         <tr>
                             <td>
                                 <strong style="font-size:12px;">${isInc ? '🟢' : '🔴'} ${t.label}</strong>
-                                <div style="font-size:9px; color:#94a3b8;">${datesStr}</div>
+                                <div style="font-size:10px; color:#64748b; font-weight:500;">${datesStr}</div>
                             </td>
                             <td style="font-size:11px; color:#64748b;">${freqNames[t.frequency]}</td>
                             <td><span style="background:${acc?.color||'#64748b'}; color:white; padding: 2px 4px; border-radius:3px; font-size:10px;">${acc?.name||'N/A'}</span></td>
@@ -451,7 +458,7 @@
                 }).join('');
             }
 
-            // Accounts list avec solde calculé
+            // Accounts list
             document.getElementById('acc-list').innerHTML = state.accounts.map(a => {
                 let accTxs = state.transactions.filter(t => t.accountId === a.id);
                 let accBal = parseFloat(a.balance);
