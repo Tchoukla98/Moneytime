@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>moneyTime - Budget Mobile Pro</title>
+    <title>moneyTime - Synchro Live</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #f1f5f9; color: #334155; padding-bottom: 40px; }
         
         header { background-color: #4f46e5; color: white; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
         .header-top h1 { font-size: 20px; font-weight: bold; }
+        .sync-badge { background: #10b981; color: white; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px; }
         .nav-btns { display: flex; gap: 6px; width: 100%; }
-        .nav-btns button, .nav-btns label { flex: 1; text-align: center; justify-content: center; background-color: #4338ca; color: white; border: none; padding: 8px 6px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .nav-btns button { flex: 1; text-align: center; justify-content: center; background-color: #4338ca; color: white; border: none; padding: 8px 6px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; }
         
         .container { width: 100%; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
         .card { background: white; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0; width: 100%; }
@@ -52,14 +54,11 @@
     <header>
         <div class="header-top">
             <h1>moneyTime</h1>
+            <span class="sync-badge" id="sync-status">🟢 Synchro Cloud</span>
         </div>
         <div class="nav-btns">
             <button onclick="openAccountModal()">+ Compte</button>
-            <button onclick="exportData()">💾 Export</button>
-            <label title="Importer">
-                📂 Import
-                <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
-            </label>
+            <button onclick="openTxModal()" class="btn-primary" style="background:#10b981;">+ Opération</button>
         </div>
     </header>
 
@@ -131,7 +130,7 @@
 
     </div>
 
-    <!-- MODAL: Compte (Création / Modification) -->
+    <!-- MODAL: Compte -->
     <div id="modal-account" class="modal-bg">
         <div class="modal">
             <h3 id="acc-modal-title">Nouveau Compte</h3>
@@ -157,7 +156,7 @@
         </div>
     </div>
 
-    <!-- MODAL: Transaction (Création / Modification) -->
+    <!-- MODAL: Transaction -->
     <div id="modal-tx" class="modal-bg">
         <div class="modal">
             <h3 id="tx-modal-title">Saisir une Opération</h3>
@@ -265,35 +264,78 @@
         </div>
     </div>
 
-    <script>
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDY5VZrSBvJ8xa5oLyZXpdjKyohdAA20Yg",
+            authDomain: "moneytime-29d78.firebaseapp.com",
+            projectId: "moneytime-29d78",
+            storageBucket: "moneytime-29d78.firebasestorage.app",
+            messagingSenderId: "698268702924",
+            appId: "1:698268702924:web:090801c8cae827bcf14a69"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const dataDocRef = doc(db, "budget", "mainData");
+
         const todayStr = new Date().toISOString().split('T')[0];
-        
+
         const defaultAccounts = [
             { id: 'acc1', name: 'Romain courant', balance: 1500, color: '#4f46e5' },
             { id: 'acc2', name: 'Laure courant', balance: 1200, color: '#0ea5e9' },
             { id: 'acc3', name: 'Compte courant', balance: 3000, color: '#10b981' }
         ];
 
-        let state = {
-            accounts: JSON.parse(localStorage.getItem('mt_acc')) || defaultAccounts,
-            transactions: JSON.parse(localStorage.getItem('mt_tx')) || [],
+        window.state = {
+            accounts: defaultAccounts,
+            transactions: [],
             selectedAccounts: ['all'],
             currentType: 'expense'
         };
 
         const freqNames = { monthly: 'Mens.', bimonthly: 'Bi-m.', quarterly: 'Trim.', semiannual: 'Sem.', annual: 'An.', once: 'Ponc.' };
 
-        function openM(id) { document.getElementById(id).classList.add('open'); }
-        function closeM(id) { document.getElementById(id).classList.remove('open'); }
-
-        function saveState() {
-            localStorage.setItem('mt_acc', JSON.stringify(state.accounts));
-            localStorage.setItem('mt_tx', JSON.stringify(state.transactions));
+        // Écoute en direct des changements dans le cloud Firebase
+        onSnapshot(dataDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data.accounts) window.state.accounts = data.accounts;
+                if (data.transactions) window.state.transactions = data.transactions;
+                document.getElementById('sync-status').innerText = '🟢 Synchro Cloud';
+                document.getElementById('sync-status').style.background = '#10b981';
+            } else {
+                saveToCloud();
+            }
             render();
+        }, (error) => {
+            console.error("Firebase sync error:", error);
+            document.getElementById('sync-status').innerText = '🔴 Hors Ligne';
+            document.getElementById('sync-status').style.background = '#ef4444';
+        });
+
+        async function saveToCloud() {
+            try {
+                document.getElementById('sync-status').innerText = '🟡 Envoi...';
+                document.getElementById('sync-status').style.background = '#f59e0b';
+                await setDoc(dataDocRef, {
+                    accounts: window.state.accounts,
+                    transactions: window.state.transactions
+                });
+            } catch (e) {
+                console.error("Error saving:", e);
+                alert("Erreur de sauvegarde Cloud : vérifiez votre connexion.");
+            }
         }
 
-        function setT(t) {
-            state.currentType = t;
+        window.openM = function(id) { document.getElementById(id).classList.add('open'); }
+        window.closeM = function(id) { document.getElementById(id).classList.remove('open'); }
+
+        window.setT = function(t) {
+            window.state.currentType = t;
             const bE = document.getElementById('btn-exp');
             const bI = document.getElementById('btn-inc');
             if(t === 'expense') {
@@ -313,25 +355,25 @@
             return `${d}/${m}/${y}`;
         }
 
-        function toggleFilter(id) {
+        window.toggleFilter = function(id) {
             if (id === 'all') {
-                state.selectedAccounts = ['all'];
+                window.state.selectedAccounts = ['all'];
             } else {
-                state.selectedAccounts = state.selectedAccounts.filter(a => a !== 'all');
-                if (state.selectedAccounts.includes(id)) {
-                    state.selectedAccounts = state.selectedAccounts.filter(a => a !== id);
-                    if (state.selectedAccounts.length === 0) state.selectedAccounts = ['all'];
+                window.state.selectedAccounts = window.state.selectedAccounts.filter(a => a !== 'all');
+                if (window.state.selectedAccounts.includes(id)) {
+                    window.state.selectedAccounts = window.state.selectedAccounts.filter(a => a !== id);
+                    if (window.state.selectedAccounts.length === 0) window.state.selectedAccounts = ['all'];
                 } else {
-                    if (state.selectedAccounts.length >= 2) state.selectedAccounts.shift();
-                    state.selectedAccounts.push(id);
+                    if (window.state.selectedAccounts.length >= 2) window.state.selectedAccounts.shift();
+                    window.state.selectedAccounts.push(id);
                 }
             }
             render();
         }
 
         function getFilteredTx() {
-            if (state.selectedAccounts.includes('all')) return state.transactions;
-            return state.transactions.filter(t => state.selectedAccounts.includes(t.accountId));
+            if (window.state.selectedAccounts.includes('all')) return window.state.transactions;
+            return window.state.transactions.filter(t => window.state.selectedAccounts.includes(t.accountId));
         }
 
         function isTxActiveInMonth(tx, year, month) {
@@ -368,15 +410,15 @@
 
         function render() {
             // Filters
-            let fHtml = `<button class="filter-badge ${state.selectedAccounts.includes('all')?'active':''}" onclick="toggleFilter('all')">Tous</button>`;
-            state.accounts.forEach(a => {
-                const act = state.selectedAccounts.includes(a.id);
+            let fHtml = `<button class="filter-badge ${window.state.selectedAccounts.includes('all')?'active':''}" onclick="toggleFilter('all')">Tous</button>`;
+            window.state.accounts.forEach(a => {
+                const act = window.state.selectedAccounts.includes(a.id);
                 fHtml += `<button class="filter-badge ${act?'active':''}" onclick="toggleFilter('${a.id}')" style="${act?`background:${a.color};color:white`:''}">${a.name}</button>`;
             });
             document.getElementById('account-filters').innerHTML = fHtml;
 
             // Comptes filtrés
-            let filteredAccs = state.selectedAccounts.includes('all') ? state.accounts : state.accounts.filter(a => state.selectedAccounts.includes(a.id));
+            let filteredAccs = window.state.selectedAccounts.includes('all') ? window.state.accounts : window.state.accounts.filter(a => window.state.selectedAccounts.includes(a.id));
             let initBal = filteredAccs.reduce((sum, a) => sum + parseFloat(a.balance), 0);
             document.getElementById('kpi-initial').innerText = initBal.toFixed(2) + ' €';
 
@@ -396,241 +438,4 @@
                 let m = mDate.getMonth();
 
                 let monthInc = 0;
-                let monthExp = 0;
-
-                filteredTxs.forEach(t => {
-                    if (isTxActiveInMonth(t, y, m)) {
-                        let amt = parseFloat(t.amount);
-                        if (t.type === 'income') monthInc += amt;
-                        else monthExp += amt;
-                    }
-                });
-
-                totalIncAnnual += monthInc;
-                totalExpAnnual += monthExp;
-                runningBalance += (monthInc - monthExp);
-
-                projHtml += `
-                    <div class="month-row">
-                        <span style="font-weight:600;">${monthNames[m]} ${y}</span>
-                        <div style="font-size:11px;">
-                            <span style="color:#10b981;">+${monthInc.toFixed(0)}€</span> | 
-                            <span style="color:#ef4444;">-${monthExp.toFixed(0)}€</span>
-                        </div>
-                        <strong style="color:${runningBalance>=0?'#4f46e5':'#ef4444'}">${runningBalance.toFixed(2)} €</strong>
-                    </div>
-                `;
-            }
-
-            document.getElementById('monthly-projection').innerHTML = projHtml;
-            document.getElementById('kpi-income').innerText = '+' + totalIncAnnual.toFixed(2) + ' €';
-            document.getElementById('kpi-expense').innerText = '-' + totalExpAnnual.toFixed(2) + ' €';
-            let net = totalIncAnnual - totalExpAnnual;
-            let netEl = document.getElementById('kpi-net');
-            netEl.innerText = (net >= 0 ? '+' : '') + net.toFixed(2) + ' €';
-            netEl.style.color = net >= 0 ? '#4f46e5' : '#ef4444';
-
-            // Transactions list
-            document.getElementById('tx-count').innerText = filteredTxs.length;
-            const tbody = document.getElementById('tx-rows');
-            if (filteredTxs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding: 12px;">Aucune opération.</td></tr>`;
-            } else {
-                tbody.innerHTML = filteredTxs.map(t => {
-                    const acc = state.accounts.find(a => a.id === t.accountId);
-                    const isInc = t.type === 'income';
-                    const datesStr = `${formatDateFR(t.startDate)}${t.endDate ? ' ➔ ' + formatDateFR(t.endDate) : ''}`;
-                    return `
-                        <tr>
-                            <td>
-                                <strong style="font-size:12px;">${isInc ? '🟢' : '🔴'} ${t.label}</strong>
-                                <div style="font-size:10px; color:#64748b; font-weight:500;">${datesStr}</div>
-                            </td>
-                            <td style="font-size:11px; color:#64748b;">${freqNames[t.frequency]}</td>
-                            <td><span style="background:${acc?.color||'#64748b'}; color:white; padding: 2px 4px; border-radius:3px; font-size:10px;">${acc?.name||'N/A'}</span></td>
-                            <td style="text-align:right; font-weight:bold; color:${isInc?'#10b981':'#ef4444'}">${isInc?'+':'-'}${parseFloat(t.amount).toFixed(2)}€</td>
-                            <td style="text-align:center; white-space:nowrap;">
-                                <button onclick="editTx('${t.id}')" style="background:none; border:none; cursor:pointer; font-size:12px;">✏️</button>
-                                <button onclick="deleteTx('${t.id}')" style="background:none; border:none; cursor:pointer; font-size:12px;">🗑️</button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-
-            // Accounts list
-            document.getElementById('acc-list').innerHTML = state.accounts.map(a => {
-                let accTxs = state.transactions.filter(t => t.accountId === a.id);
-                let accBal = parseFloat(a.balance);
-                accTxs.forEach(t => {
-                    if (isTxActiveInMonth(t, now.getFullYear(), now.getMonth())) {
-                        if (t.type === 'income') accBal += parseFloat(t.amount);
-                        else accBal -= parseFloat(t.amount);
-                    }
-                });
-
-                return `
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding: 6px 10px; background:#f8fafc; border-radius:6px;">
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <span style="width:8px; height:8px; border-radius:50%; background:${a.color}; display:inline-block;"></span>
-                            <strong style="font-size:12px;">${a.name}</strong>
-                        </div>
-                        <div>
-                            <span style="font-weight:bold; font-size:12px; margin-right:6px;">${accBal.toFixed(2)} €</span>
-                            <button onclick="editAccount('${a.id}')" style="background:none; border:none; cursor:pointer; font-size:11px;">✏️</button>
-                            <button onclick="deleteAcc('${a.id}')" style="background:none; border:none; cursor:pointer; font-size:11px;">🗑️</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            // Selects update
-            const opts = state.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
-            document.getElementById('tx-acc').innerHTML = opts;
-            document.getElementById('tr-from').innerHTML = opts;
-            document.getElementById('tr-to').innerHTML = opts;
-        }
-
-        // --- GESTION COMPTE ---
-        function openAccountModal() {
-            document.getElementById('acc-edit-id').value = '';
-            document.getElementById('acc-modal-title').innerText = 'Nouveau Compte';
-            document.getElementById('acc-name').value = '';
-            document.getElementById('acc-balance').value = '0.00';
-            document.getElementById('acc-color').value = '#4f46e5';
-            openM('modal-account');
-        }
-
-        function editAccount(id) {
-            const acc = state.accounts.find(a => a.id === id);
-            if (!acc) return;
-            document.getElementById('acc-edit-id').value = acc.id;
-            document.getElementById('acc-modal-title').innerText = 'Modifier le Compte';
-            document.getElementById('acc-name').value = acc.name;
-            document.getElementById('acc-balance').value = acc.balance;
-            document.getElementById('acc-color').value = acc.color;
-            openM('modal-account');
-        }
-
-        function saveAccount(e) {
-            e.preventDefault();
-            const editId = document.getElementById('acc-edit-id').value;
-            const name = document.getElementById('acc-name').value;
-            const balance = parseFloat(document.getElementById('acc-balance').value);
-            const color = document.getElementById('acc-color').value;
-
-            if (editId) {
-                const acc = state.accounts.find(a => a.id === editId);
-                if (acc) { acc.name = name; acc.balance = balance; acc.color = color; }
-            } else {
-                state.accounts.push({ id: 'acc_' + Date.now(), name, balance, color });
-            }
-            saveState();
-            closeM('modal-account');
-        }
-
-        // --- GESTION TRANSACTIONS ---
-        function openTxModal() {
-            document.getElementById('tx-edit-id').value = '';
-            document.getElementById('tx-modal-title').innerText = 'Saisir une Opération';
-            document.getElementById('tx-label').value = '';
-            document.getElementById('tx-amount').value = '';
-            document.getElementById('tx-start').value = todayStr;
-            document.getElementById('tx-end').value = '';
-            setT('expense');
-            openM('modal-tx');
-        }
-
-        function editTx(id) {
-            const t = state.transactions.find(tx => tx.id === id);
-            if (!t) return;
-            document.getElementById('tx-edit-id').value = t.id;
-            document.getElementById('tx-modal-title').innerText = 'Modifier l\'Opération';
-            document.getElementById('tx-label').value = t.label;
-            document.getElementById('tx-amount').value = t.amount;
-            document.getElementById('tx-freq').value = t.frequency;
-            document.getElementById('tx-start').value = t.startDate || todayStr;
-            document.getElementById('tx-end').value = t.endDate || '';
-            document.getElementById('tx-acc').value = t.accountId;
-            setT(t.type);
-            openM('modal-tx');
-        }
-
-        function saveTx(e) {
-            e.preventDefault();
-            const editId = document.getElementById('tx-edit-id').value;
-            const txData = {
-                type: state.currentType,
-                label: document.getElementById('tx-label').value,
-                amount: parseFloat(document.getElementById('tx-amount').value),
-                frequency: document.getElementById('tx-freq').value,
-                startDate: document.getElementById('tx-start').value,
-                endDate: document.getElementById('tx-end').value,
-                accountId: document.getElementById('tx-acc').value
-            };
-
-            if (editId) {
-                const idx = state.transactions.findIndex(t => t.id === editId);
-                if (idx !== -1) state.transactions[idx] = { id: editId, ...txData };
-            } else {
-                state.transactions.push({ id: 'tx_' + Date.now(), ...txData });
-            }
-            saveState();
-            closeM('modal-tx');
-        }
-
-        function saveTr(e) {
-            e.preventDefault();
-            const fromId = document.getElementById('tr-from').value;
-            const toId = document.getElementById('tr-to').value;
-            const amount = parseFloat(document.getElementById('tr-amount').value);
-            const freq = document.getElementById('tr-freq').value;
-            const label = document.getElementById('tr-label').value;
-            const startDate = document.getElementById('tr-start').value;
-            const endDate = document.getElementById('tr-end').value;
-
-            if(fromId === toId) { alert("Choisissez deux comptes différents."); return; }
-
-            state.transactions.push({ id: 'tx_'+Date.now()+'_1', type: 'expense', label: `[Virement vers ${state.accounts.find(a=>a.id===toId)?.name}] ${label}`, amount, frequency: freq, startDate, endDate, accountId: fromId });
-            state.transactions.push({ id: 'tx_'+Date.now()+'_2', type: 'income', label: `[Virement depuis ${state.accounts.find(a=>a.id===fromId)?.name}] ${label}`, amount, frequency: freq, startDate, endDate, accountId: toId });
-            saveState();
-            closeM('modal-tr');
-        }
-
-        function deleteTx(id) { state.transactions = state.transactions.filter(t => t.id !== id); saveState(); }
-        function deleteAcc(id) {
-            if(state.accounts.length <= 1) { alert("Conservez au moins un compte."); return; }
-            state.accounts = state.accounts.filter(a => a.id !== id);
-            state.transactions = state.transactions.filter(t => t.accountId !== id);
-            saveState();
-        }
-
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
-            const dl = document.createElement('a');
-            dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", "moneyTime_backup.json");
-            dl.click();
-        }
-
-        function importData(e) {
-            const fr = new FileReader();
-            fr.onload = function(evt) {
-                try {
-                    const p = JSON.parse(evt.target.result);
-                    if(p.accounts && p.transactions) {
-                        state.accounts = p.accounts;
-                        state.transactions = p.transactions;
-                        saveState();
-                        alert("Données importées !");
-                    }
-                } catch(err) { alert("Fichier invalide."); }
-            };
-            fr.readAsText(e.target.files[0]);
-        }
-
-        document.getElementById('tr-start').value = todayStr;
-        render();
-    </script>
-</body>
-</html>
+                let monthExp = 0
