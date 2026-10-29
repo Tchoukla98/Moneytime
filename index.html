@@ -3,53 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>moneyTime - Budget Mobile</title>
+    <title>moneyTime - Budget Mobile Pro</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #f1f5f9; color: #334155; padding-bottom: 30px; }
+        body { background-color: #f1f5f9; color: #334155; padding-bottom: 40px; }
         
-        /* En-tête mobile */
         header { background-color: #4f46e5; color: white; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; }
         .header-top h1 { font-size: 20px; font-weight: bold; }
         .nav-btns { display: flex; gap: 6px; width: 100%; }
         .nav-btns button, .nav-btns label { flex: 1; text-align: center; justify-content: center; background-color: #4338ca; color: white; border: none; padding: 8px 6px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; }
         
-        /* Layout vertical pour smartphone */
         .container { width: 100%; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
         .card { background: white; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0; width: 100%; }
         
-        /* KPIs empilés verticalement */
         .kpi-list { display: flex; flex-direction: column; gap: 8px; }
         .kpi-card { background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .kpi-title { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; }
         .kpi-value { font-size: 20px; font-weight: bold; margin-top: 2px; }
         
-        /* Boutons d'action */
         .btn-primary { background-color: #10b981; color: white; }
         .btn-blue { background-color: #2563eb; color: white; }
         .btn-danger { background-color: #ef4444; color: white; }
         .action-btns { display: flex; flex-direction: column; gap: 8px; width: 100%; }
         .action-btns button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; }
         
-        /* Filtres */
         .filter-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; background: #e2e8f0; color: #475569; }
         .filter-badge.active { background: #4f46e5; color: white; }
         
-        /* Tableau défilable */
         table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
         th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #f1f5f9; }
         th { background: #f8fafc; color: #64748b; font-size: 10px; text-transform: uppercase; }
         
-        /* Modales ajustées smartphone */
         .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
         .modal-bg.open { display: flex; }
-        .modal { background: white; border-radius: 12px; width: 100%; max-width: 360px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+        .modal { background: white; border-radius: 12px; width: 100%; max-width: 380px; padding: 16px; display: flex; flex-direction: column; gap: 10px; max-height: 90vh; overflow-y: auto; }
         .modal h3 { font-size: 16px; font-weight: bold; }
         .form-group { display: flex; flex-direction: column; gap: 3px; }
         .form-group label { font-size: 11px; font-weight: 600; color: #475569; }
         .form-group input, .form-group select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none; width: 100%; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        
+        .month-bar-container { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+        .month-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: #f8fafc; border-radius: 6px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -59,7 +54,7 @@
             <h1>moneyTime</h1>
         </div>
         <div class="nav-btns">
-            <button onclick="openM('modal-account')">+ Compte</button>
+            <button onclick="openAccountModal()">+ Compte</button>
             <button onclick="exportData()">💾 Export</button>
             <label title="Importer">
                 📂 Import
@@ -83,11 +78,11 @@
                 <div class="kpi-value" id="kpi-initial">0.00 €</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-title" style="color:#10b981;">Revenus Annuels Totaux</div>
+                <div class="kpi-title" style="color:#10b981;">Revenus Annuels Estimés</div>
                 <div class="kpi-value" style="color:#10b981;" id="kpi-income">+0.00 €</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-title" style="color:#ef4444;">Dépenses Annuelles Totales</div>
+                <div class="kpi-title" style="color:#ef4444;">Dépenses Annuelles Estimées</div>
                 <div class="kpi-value" style="color:#ef4444;" id="kpi-expense">-0.00 €</div>
             </div>
             <div class="kpi-card">
@@ -96,10 +91,17 @@
             </div>
         </div>
 
-        <!-- Boutons d'action gros format -->
+        <!-- Boutons d'action -->
         <div class="action-btns">
-            <button class="btn-primary" onclick="openM('modal-tx')">+ Ajouter une Opération</button>
+            <button class="btn-primary" onclick="openTxModal()">+ Ajouter une Opération</button>
             <button class="btn-blue" onclick="openM('modal-tr')">⇄ Virement Inter-Comptes</button>
+        </div>
+
+        <!-- Projection Mois par Mois -->
+        <div class="card">
+            <h3 style="font-size: 14px; margin-bottom: 4px;">📅 Solde Prévisionnel Mois par Mois</h3>
+            <p style="font-size: 11px; color: #64748b; margin-bottom: 8px;">Estimation du solde à la fin de chaque mois :</p>
+            <div id="monthly-projection" class="month-bar-container"></div>
         </div>
 
         <!-- Liste des opérations -->
@@ -109,11 +111,11 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Libellé</th>
+                            <th>Libellé / Dates</th>
                             <th>Freq.</th>
                             <th>Compte</th>
                             <th style="text-align: right;">Montant</th>
-                            <th style="text-align: center;"></th>
+                            <th style="text-align: center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="tx-rows"></tbody>
@@ -129,14 +131,15 @@
 
     </div>
 
-    <!-- MODAL: Compte -->
+    <!-- MODAL: Compte (Création / Modification) -->
     <div id="modal-account" class="modal-bg">
         <div class="modal">
-            <h3>Nouveau Compte</h3>
+            <h3 id="acc-modal-title">Nouveau Compte</h3>
             <form onsubmit="saveAccount(event)">
+                <input type="hidden" id="acc-edit-id">
                 <div class="form-group">
                     <label>Nom du Compte</label>
-                    <input type="text" id="acc-name" required placeholder="ex: Compte Perso A">
+                    <input type="text" id="acc-name" required placeholder="ex: Romain courant">
                 </div>
                 <div class="form-group" style="margin-top: 6px;">
                     <label>Solde Initial (€)</label>
@@ -148,17 +151,18 @@
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
                     <button type="button" onclick="closeM('modal-account')" style="background:#cbd5e1; color:#334155; padding:8px 12px; border:none; border-radius:6px; font-weight:600;">Annuler</button>
-                    <button type="submit" class="btn-blue" style="padding:8px 12px; border:none; border-radius:6px; font-weight:600;">Créer</button>
+                    <button type="submit" class="btn-blue" style="padding:8px 12px; border:none; border-radius:6px; font-weight:600;">Enregistrer</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL: Transaction -->
+    <!-- MODAL: Transaction (Création / Modification) -->
     <div id="modal-tx" class="modal-bg">
         <div class="modal">
-            <h3>Saisir une Opération</h3>
+            <h3 id="tx-modal-title">Saisir une Opération</h3>
             <form onsubmit="saveTx(event)">
+                <input type="hidden" id="tx-edit-id">
                 <div class="form-group">
                     <label>Type</label>
                     <div class="grid-2">
@@ -168,7 +172,7 @@
                 </div>
                 <div class="form-group" style="margin-top: 6px;">
                     <label>Libellé</label>
-                    <input type="text" id="tx-label" required placeholder="ex: Loyer, Courses">
+                    <input type="text" id="tx-label" required placeholder="ex: Salaire, Loyer">
                 </div>
                 <div class="grid-2" style="margin-top: 6px;">
                     <div class="form-group">
@@ -185,6 +189,16 @@
                             <option value="annual">Annuel</option>
                             <option value="once">Ponctuel</option>
                         </select>
+                    </div>
+                </div>
+                <div class="grid-2" style="margin-top: 6px;">
+                    <div class="form-group">
+                        <label>Date Début *</label>
+                        <input type="date" id="tx-start" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date Fin (Optionnel)</label>
+                        <input type="date" id="tx-end">
                     </div>
                 </div>
                 <div class="form-group" style="margin-top: 6px;">
@@ -233,6 +247,16 @@
                         </select>
                     </div>
                 </div>
+                <div class="grid-2" style="margin-top: 6px;">
+                    <div class="form-group">
+                        <label>Date Début *</label>
+                        <input type="date" id="tr-start" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date Fin (Optionnel)</label>
+                        <input type="date" id="tr-end">
+                    </div>
+                </div>
                 <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
                     <button type="button" onclick="closeM('modal-tr')" style="background:#cbd5e1; color:#334155; padding:8px 12px; border:none; border-radius:6px; font-weight:600;">Annuler</button>
                     <button type="submit" class="btn-blue" style="padding:8px 12px; border:none; border-radius:6px; font-weight:600;">Effectuer</button>
@@ -242,10 +266,12 @@
     </div>
 
     <script>
+        const todayStr = new Date().toISOString().split('T')[0];
+        
         const defaultAccounts = [
-            { id: 'acc1', name: 'Compte Courant A', balance: 1500, color: '#4f46e5' },
-            { id: 'acc2', name: 'Compte Courant B', balance: 1200, color: '#0ea5e9' },
-            { id: 'acc3', name: 'Compte Joint', balance: 3000, color: '#10b981' }
+            { id: 'acc1', name: 'Romain courant', balance: 1500, color: '#4f46e5' },
+            { id: 'acc2', name: 'Laure courant', balance: 1200, color: '#0ea5e9' },
+            { id: 'acc3', name: 'Compte courant', balance: 3000, color: '#10b981' }
         ];
 
         let state = {
@@ -255,7 +281,6 @@
             currentType: 'expense'
         };
 
-        const mults = { monthly: 12, bimonthly: 6, quarterly: 4, semiannual: 2, annual: 1, once: 1 };
         const freqNames = { monthly: 'Mens.', bimonthly: 'Bi-m.', quarterly: 'Trim.', semiannual: 'Sem.', annual: 'An.', once: 'Ponc.' };
 
         function openM(id) { document.getElementById(id).classList.add('open'); }
@@ -301,8 +326,41 @@
             return state.transactions.filter(t => state.selectedAccounts.includes(t.accountId));
         }
 
+        // Teste si une transaction s'applique à un mois donné (format YYYY-MM)
+        function isTxActiveInMonth(tx, year, month) {
+            const monthStart = new Date(year, month, 1);
+            const monthEnd = new Date(year, month + 1, 0);
+
+            const txStart = new Date(tx.startDate || '2020-01-01');
+            const txEnd = tx.endDate ? new Date(tx.endDate) : null;
+
+            if (txStart > monthEnd) return false;
+            if (txEnd && txEnd < monthStart) return false;
+
+            if (tx.frequency === 'once') {
+                return txStart.getFullYear() === year && txStart.getMonth() === month;
+            }
+            if (tx.frequency === 'bimonthly') {
+                const diffMonths = (year - txStart.getFullYear()) * 12 + (month - txStart.getMonth());
+                return diffMonths >= 0 && diffMonths % 2 === 0;
+            }
+            if (tx.frequency === 'quarterly') {
+                const diffMonths = (year - txStart.getFullYear()) * 12 + (month - txStart.getMonth());
+                return diffMonths >= 0 && diffMonths % 3 === 0;
+            }
+            if (tx.frequency === 'semiannual') {
+                const diffMonths = (year - txStart.getFullYear()) * 12 + (month - txStart.getMonth());
+                return diffMonths >= 0 && diffMonths % 6 === 0;
+            }
+            if (tx.frequency === 'annual') {
+                return txStart.getMonth() === month && year >= txStart.getFullYear();
+            }
+
+            return true; // monthly
+        }
+
         function render() {
-            // Render Filters
+            // Filters
             let fHtml = `<button class="filter-badge ${state.selectedAccounts.includes('all')?'active':''}" onclick="toggleFilter('all')">Tous</button>`;
             state.accounts.forEach(a => {
                 const act = state.selectedAccounts.includes(a.id);
@@ -310,89 +368,206 @@
             });
             document.getElementById('account-filters').innerHTML = fHtml;
 
-            // Render KPIs
+            // Comptes filtrés
             let filteredAccs = state.selectedAccounts.includes('all') ? state.accounts : state.accounts.filter(a => state.selectedAccounts.includes(a.id));
             let initBal = filteredAccs.reduce((sum, a) => sum + parseFloat(a.balance), 0);
-            let txs = getFilteredTx();
-            let inc = 0, exp = 0;
-            txs.forEach(t => {
-                let m = mults[t.frequency] || 1;
-                let tot = parseFloat(t.amount) * m;
-                if (t.type === 'income') inc += tot; else exp += tot;
-            });
-
             document.getElementById('kpi-initial').innerText = initBal.toFixed(2) + ' €';
-            document.getElementById('kpi-income').innerText = '+' + inc.toFixed(2) + ' €';
-            document.getElementById('kpi-expense').innerText = '-' + exp.toFixed(2) + ' €';
-            let net = inc - exp;
+
+            // Projection 12 mois
+            const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+            let now = new Date();
+            let runningBalance = initBal;
+            let totalIncAnnual = 0;
+            let totalExpAnnual = 0;
+            let projHtml = '';
+
+            let filteredTxs = getFilteredTx();
+
+            for (let i = 0; i < 12; i++) {
+                let mDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
+                let y = mDate.getFullYear();
+                let m = mDate.getMonth();
+
+                let monthInc = 0;
+                let monthExp = 0;
+
+                filteredTxs.forEach(t => {
+                    if (isTxActiveInMonth(t, y, m)) {
+                        let amt = parseFloat(t.amount);
+                        if (t.type === 'income') monthInc += amt;
+                        else monthExp += amt;
+                    }
+                });
+
+                totalIncAnnual += monthInc;
+                totalExpAnnual += monthExp;
+                runningBalance += (monthInc - monthExp);
+
+                projHtml += `
+                    <div class="month-row">
+                        <span style="font-weight:600;">${monthNames[m]} ${y}</span>
+                        <div style="font-size:11px;">
+                            <span style="color:#10b981;">+${monthInc.toFixed(0)}€</span> | 
+                            <span style="color:#ef4444;">-${monthExp.toFixed(0)}€</span>
+                        </div>
+                        <strong style="color:${runningBalance>=0?'#4f46e5':'#ef4444'}">${runningBalance.toFixed(2)} €</strong>
+                    </div>
+                `;
+            }
+
+            document.getElementById('monthly-projection').innerHTML = projHtml;
+            document.getElementById('kpi-income').innerText = '+' + totalIncAnnual.toFixed(2) + ' €';
+            document.getElementById('kpi-expense').innerText = '-' + totalExpAnnual.toFixed(2) + ' €';
+            let net = totalIncAnnual - totalExpAnnual;
             let netEl = document.getElementById('kpi-net');
             netEl.innerText = (net >= 0 ? '+' : '') + net.toFixed(2) + ' €';
             netEl.style.color = net >= 0 ? '#4f46e5' : '#ef4444';
 
-            // Render Transactions
-            document.getElementById('tx-count').innerText = txs.length;
+            // Transactions list
+            document.getElementById('tx-count').innerText = filteredTxs.length;
             const tbody = document.getElementById('tx-rows');
-            if (txs.length === 0) {
+            if (filteredTxs.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding: 12px;">Aucune opération.</td></tr>`;
             } else {
-                tbody.innerHTML = txs.map(t => {
+                tbody.innerHTML = filteredTxs.map(t => {
                     const acc = state.accounts.find(a => a.id === t.accountId);
                     const isInc = t.type === 'income';
+                    const datesStr = `${t.startDate ? t.startDate.substring(2) : ''}${t.endDate ? ' ➔ ' + t.endDate.substring(2) : ''}`;
                     return `
                         <tr>
-                            <td style="font-weight:600;">${isInc ? '🟢' : '🔴'} ${t.label}</td>
+                            <td>
+                                <strong style="font-size:12px;">${isInc ? '🟢' : '🔴'} ${t.label}</strong>
+                                <div style="font-size:9px; color:#94a3b8;">${datesStr}</div>
+                            </td>
                             <td style="font-size:11px; color:#64748b;">${freqNames[t.frequency]}</td>
                             <td><span style="background:${acc?.color||'#64748b'}; color:white; padding: 2px 4px; border-radius:3px; font-size:10px;">${acc?.name||'N/A'}</span></td>
                             <td style="text-align:right; font-weight:bold; color:${isInc?'#10b981':'#ef4444'}">${isInc?'+':'-'}${parseFloat(t.amount).toFixed(2)}€</td>
-                            <td style="text-align:center;"><button onclick="deleteTx('${t.id}')" class="btn-danger" style="padding:1px 5px; font-size:10px; border:none; border-radius:3px;">X</button></td>
+                            <td style="text-align:center; white-space:nowrap;">
+                                <button onclick="editTx('${t.id}')" style="background:none; border:none; cursor:pointer; font-size:12px;">✏️</button>
+                                <button onclick="deleteTx('${t.id}')" style="background:none; border:none; cursor:pointer; font-size:12px;">🗑️</button>
+                            </td>
                         </tr>
                     `;
                 }).join('');
             }
 
-            // Render Accounts
-            document.getElementById('acc-list').innerHTML = state.accounts.map(a => `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding: 6px 10px; background:#f8fafc; border-radius:6px;">
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <span style="width:8px; height:8px; border-radius:50%; background:${a.color}; display:inline-block;"></span>
-                        <strong style="font-size:12px;">${a.name}</strong>
-                    </div>
-                    <div>
-                        <span style="font-weight:bold; font-size:12px; margin-right:6px;">${parseFloat(a.balance).toFixed(2)} €</span>
-                        <button onclick="deleteAcc('${a.id}')" style="background:none; border:none; color:#ef4444; font-size:11px;">🗑️</button>
-                    </div>
-                </div>
-            `).join('');
+            // Accounts list avec solde calculé
+            document.getElementById('acc-list').innerHTML = state.accounts.map(a => {
+                let accTxs = state.transactions.filter(t => t.accountId === a.id);
+                let accBal = parseFloat(a.balance);
+                accTxs.forEach(t => {
+                    if (isTxActiveInMonth(t, now.getFullYear(), now.getMonth())) {
+                        if (t.type === 'income') accBal += parseFloat(t.amount);
+                        else accBal -= parseFloat(t.amount);
+                    }
+                });
 
-            // Update Selects
+                return `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding: 6px 10px; background:#f8fafc; border-radius:6px;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="width:8px; height:8px; border-radius:50%; background:${a.color}; display:inline-block;"></span>
+                            <strong style="font-size:12px;">${a.name}</strong>
+                        </div>
+                        <div>
+                            <span style="font-weight:bold; font-size:12px; margin-right:6px;">${accBal.toFixed(2)} €</span>
+                            <button onclick="editAccount('${a.id}')" style="background:none; border:none; cursor:pointer; font-size:11px;">✏️</button>
+                            <button onclick="deleteAcc('${a.id}')" style="background:none; border:none; cursor:pointer; font-size:11px;">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Selects update
             const opts = state.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
             document.getElementById('tx-acc').innerHTML = opts;
             document.getElementById('tr-from').innerHTML = opts;
             document.getElementById('tr-to').innerHTML = opts;
         }
 
+        // --- GESTION COMPTE ---
+        function openAccountModal() {
+            document.getElementById('acc-edit-id').value = '';
+            document.getElementById('acc-modal-title').innerText = 'Nouveau Compte';
+            document.getElementById('acc-name').value = '';
+            document.getElementById('acc-balance').value = '0.00';
+            document.getElementById('acc-color').value = '#4f46e5';
+            openM('modal-account');
+        }
+
+        function editAccount(id) {
+            const acc = state.accounts.find(a => a.id === id);
+            if (!acc) return;
+            document.getElementById('acc-edit-id').value = acc.id;
+            document.getElementById('acc-modal-title').innerText = 'Modifier le Compte';
+            document.getElementById('acc-name').value = acc.name;
+            document.getElementById('acc-balance').value = acc.balance;
+            document.getElementById('acc-color').value = acc.color;
+            openM('modal-account');
+        }
+
         function saveAccount(e) {
             e.preventDefault();
-            state.accounts.push({
-                id: 'acc_' + Date.now(),
-                name: document.getElementById('acc-name').value,
-                balance: parseFloat(document.getElementById('acc-balance').value),
-                color: document.getElementById('acc-color').value
-            });
+            const editId = document.getElementById('acc-edit-id').value;
+            const name = document.getElementById('acc-name').value;
+            const balance = parseFloat(document.getElementById('acc-balance').value);
+            const color = document.getElementById('acc-color').value;
+
+            if (editId) {
+                const acc = state.accounts.find(a => a.id === editId);
+                if (acc) { acc.name = name; acc.balance = balance; acc.color = color; }
+            } else {
+                state.accounts.push({ id: 'acc_' + Date.now(), name, balance, color });
+            }
             saveState();
             closeM('modal-account');
         }
 
+        // --- GESTION TRANSACTIONS ---
+        function openTxModal() {
+            document.getElementById('tx-edit-id').value = '';
+            document.getElementById('tx-modal-title').innerText = 'Saisir une Opération';
+            document.getElementById('tx-label').value = '';
+            document.getElementById('tx-amount').value = '';
+            document.getElementById('tx-start').value = todayStr;
+            document.getElementById('tx-end').value = '';
+            setT('expense');
+            openM('modal-tx');
+        }
+
+        function editTx(id) {
+            const t = state.transactions.find(tx => tx.id === id);
+            if (!t) return;
+            document.getElementById('tx-edit-id').value = t.id;
+            document.getElementById('tx-modal-title').innerText = 'Modifier l\'Opération';
+            document.getElementById('tx-label').value = t.label;
+            document.getElementById('tx-amount').value = t.amount;
+            document.getElementById('tx-freq').value = t.frequency;
+            document.getElementById('tx-start').value = t.startDate || todayStr;
+            document.getElementById('tx-end').value = t.endDate || '';
+            document.getElementById('tx-acc').value = t.accountId;
+            setT(t.type);
+            openM('modal-tx');
+        }
+
         function saveTx(e) {
             e.preventDefault();
-            state.transactions.push({
-                id: 'tx_' + Date.now(),
+            const editId = document.getElementById('tx-edit-id').value;
+            const txData = {
                 type: state.currentType,
                 label: document.getElementById('tx-label').value,
                 amount: parseFloat(document.getElementById('tx-amount').value),
                 frequency: document.getElementById('tx-freq').value,
+                startDate: document.getElementById('tx-start').value,
+                endDate: document.getElementById('tx-end').value,
                 accountId: document.getElementById('tx-acc').value
-            });
+            };
+
+            if (editId) {
+                const idx = state.transactions.findIndex(t => t.id === editId);
+                if (idx !== -1) state.transactions[idx] = { id: editId, ...txData };
+            } else {
+                state.transactions.push({ id: 'tx_' + Date.now(), ...txData });
+            }
             saveState();
             closeM('modal-tx');
         }
@@ -404,11 +579,13 @@
             const amount = parseFloat(document.getElementById('tr-amount').value);
             const freq = document.getElementById('tr-freq').value;
             const label = document.getElementById('tr-label').value;
+            const startDate = document.getElementById('tr-start').value;
+            const endDate = document.getElementById('tr-end').value;
 
             if(fromId === toId) { alert("Choisissez deux comptes différents."); return; }
 
-            state.transactions.push({ id: 'tx_'+Date.now()+'_1', type: 'expense', label: `[Virement vers ${state.accounts.find(a=>a.id===toId)?.name}] ${label}`, amount, frequency: freq, accountId: fromId });
-            state.transactions.push({ id: 'tx_'+Date.now()+'_2', type: 'income', label: `[Virement depuis ${state.accounts.find(a=>a.id===fromId)?.name}] ${label}`, amount, frequency: freq, accountId: toId });
+            state.transactions.push({ id: 'tx_'+Date.now()+'_1', type: 'expense', label: `[Virement vers ${state.accounts.find(a=>a.id===toId)?.name}] ${label}`, amount, frequency: freq, startDate, endDate, accountId: fromId });
+            state.transactions.push({ id: 'tx_'+Date.now()+'_2', type: 'income', label: `[Virement depuis ${state.accounts.find(a=>a.id===fromId)?.name}] ${label}`, amount, frequency: freq, startDate, endDate, accountId: toId });
             saveState();
             closeM('modal-tr');
         }
@@ -445,6 +622,7 @@
             fr.readAsText(e.target.files[0]);
         }
 
+        document.getElementById('tr-start').value = todayStr;
         render();
     </script>
 </body>
