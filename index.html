@@ -2,49 +2,66 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>moneyTime - Gestion de Budget</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>moneyTime - Budget Mobile</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #f1f5f9; color: #334155; padding-bottom: 40px; }
-        header { background-color: #4f46e5; color: white; padding: 16px; display: flex; justify-content: space-between; items-center; }
-        header h1 { font-size: 20px; font-weight: bold; }
-        .nav-btns { display: flex; gap: 8px; }
-        button, label.btn-label { background-color: #4338ca; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
-        button:hover, label.btn-label:hover { background-color: #3730a3; }
-        .container { max-width: 1000px; margin: 16px auto; padding: 0 12px; display: flex; flex-col; gap: 16px; }
-        .card { background: white; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
-        .kpi-card { background: white; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0; }
-        .kpi-title { font-size: 12px; color: #64748b; font-weight: 600; }
-        .kpi-value { font-size: 22px; font-weight: bold; margin-top: 4px; }
-        .btn-primary { background-color: #10b981; } .btn-primary:hover { background-color: #059669; }
-        .btn-blue { background-color: #2563eb; } .btn-blue:hover { background-color: #1d4ed8; }
-        .btn-danger { background-color: #ef4444; } .btn-danger:hover { background-color: #dc2626; }
-        .flex-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        body { background-color: #f1f5f9; color: #334155; padding-bottom: 30px; }
+        
+        /* En-tête mobile */
+        header { background-color: #4f46e5; color: white; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .header-top h1 { font-size: 20px; font-weight: bold; }
+        .nav-btns { display: flex; gap: 6px; width: 100%; }
+        .nav-btns button, .nav-btns label { flex: 1; text-align: center; justify-content: center; background-color: #4338ca; color: white; border: none; padding: 8px 6px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        
+        /* Layout vertical pour smartphone */
+        .container { width: 100%; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+        .card { background: white; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0; width: 100%; }
+        
+        /* KPIs empilés verticalement */
+        .kpi-list { display: flex; flex-direction: column; gap: 8px; }
+        .kpi-card { background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .kpi-title { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+        .kpi-value { font-size: 20px; font-weight: bold; margin-top: 2px; }
+        
+        /* Boutons d'action */
+        .btn-primary { background-color: #10b981; color: white; }
+        .btn-blue { background-color: #2563eb; color: white; }
+        .btn-danger { background-color: #ef4444; color: white; }
+        .action-btns { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .action-btns button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; }
+        
+        /* Filtres */
         .filter-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; background: #e2e8f0; color: #475569; }
         .filter-badge.active { background: #4f46e5; color: white; }
-        table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #f1f5f9; }
-        th { background: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; }
-        .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
+        
+        /* Tableau défilable */
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+        th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #f1f5f9; }
+        th { background: #f8fafc; color: #64748b; font-size: 10px; text-transform: uppercase; }
+        
+        /* Modales ajustées smartphone */
+        .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
         .modal-bg.open { display: flex; }
-        .modal { background: white; border-radius: 12px; max-width: 400px; width: 100%; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .modal h3 { font-size: 18px; font-weight: bold; }
-        .form-group { display: flex; flex-direction: column; gap: 4px; }
-        .form-group label { font-size: 12px; font-weight: 600; color: #475569; }
-        .form-group input, .form-group select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .modal { background: white; border-radius: 12px; width: 100%; max-width: 360px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+        .modal h3 { font-size: 16px; font-weight: bold; }
+        .form-group { display: flex; flex-direction: column; gap: 3px; }
+        .form-group label { font-size: 11px; font-weight: 600; color: #475569; }
+        .form-group input, .form-group select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none; width: 100%; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>moneyTime</h1>
+        <div class="header-top">
+            <h1>moneyTime</h1>
+        </div>
         <div class="nav-btns">
             <button onclick="openM('modal-account')">+ Compte</button>
-            <button onclick="exportData()" title="Exporter">💾 Export</button>
-            <label class="btn-label" title="Importer">
+            <button onclick="exportData()">💾 Export</button>
+            <label title="Importer">
                 📂 Import
                 <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
             </label>
@@ -55,12 +72,12 @@
 
         <!-- Filtre des comptes -->
         <div class="card">
-            <p style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #475569;">Filtre des Comptes (Sélectionnez 1 ou 2 comptes pour analyse duo)</p>
+            <p style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #475569;">Filtre des Comptes (Solo / Duo)</p>
             <div id="account-filters" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
         </div>
 
-        <!-- KPIs -->
-        <div class="kpi-grid">
+        <!-- KPIs Verticalisés -->
+        <div class="kpi-list">
             <div class="kpi-card">
                 <div class="kpi-title">Solde Initial Cumulé</div>
                 <div class="kpi-value" id="kpi-initial">0.00 €</div>
@@ -79,24 +96,24 @@
             </div>
         </div>
 
-        <!-- Boutons d'action -->
-        <div class="flex-actions">
-            <button class="btn-primary" onclick="openM('modal-tx')" style="padding: 10px 16px; font-size: 14px;">+ Ajouter une Opération</button>
-            <button class="btn-blue" onclick="openM('modal-tr')" style="padding: 10px 16px; font-size: 14px;">⇄ Virement Inter-Comptes</button>
+        <!-- Boutons d'action gros format -->
+        <div class="action-btns">
+            <button class="btn-primary" onclick="openM('modal-tx')">+ Ajouter une Opération</button>
+            <button class="btn-blue" onclick="openM('modal-tr')">⇄ Virement Inter-Comptes</button>
         </div>
 
         <!-- Liste des opérations -->
         <div class="card">
-            <h3 style="font-size: 15px; margin-bottom: 8px;">Toutes les Opérations (<span id="tx-count">0</span>)</h3>
+            <h3 style="font-size: 14px; margin-bottom: 6px;">Opérations (<span id="tx-count">0</span>)</h3>
             <div style="overflow-x: auto;">
                 <table>
                     <thead>
                         <tr>
-                            <th>Type / Libellé</th>
-                            <th>Fréquence</th>
+                            <th>Libellé</th>
+                            <th>Freq.</th>
                             <th>Compte</th>
                             <th style="text-align: right;">Montant</th>
-                            <th style="text-align: center;">Action</th>
+                            <th style="text-align: center;"></th>
                         </tr>
                     </thead>
                     <tbody id="tx-rows"></tbody>
@@ -106,8 +123,8 @@
 
         <!-- Liste des comptes -->
         <div class="card">
-            <h3 style="font-size: 15px; margin-bottom: 8px;">Mes Comptes</h3>
-            <div id="acc-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            <h3 style="font-size: 14px; margin-bottom: 6px;">Mes Comptes</h3>
+            <div id="acc-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
         </div>
 
     </div>
@@ -119,19 +136,19 @@
             <form onsubmit="saveAccount(event)">
                 <div class="form-group">
                     <label>Nom du Compte</label>
-                    <input type="text" id="acc-name" required placeholder="ex: Compte Perso, Joint">
+                    <input type="text" id="acc-name" required placeholder="ex: Compte Perso A">
                 </div>
-                <div class="form-group" style="margin-top: 8px;">
+                <div class="form-group" style="margin-top: 6px;">
                     <label>Solde Initial (€)</label>
                     <input type="number" step="0.01" id="acc-balance" required value="0.00">
                 </div>
-                <div class="form-group" style="margin-top: 8px;">
+                <div class="form-group" style="margin-top: 6px;">
                     <label>Couleur</label>
-                    <input type="color" id="acc-color" value="#4f46e5" style="height: 40px; cursor: pointer;">
+                    <input type="color" id="acc-color" value="#4f46e5" style="height: 36px; cursor: pointer;">
                 </div>
-                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
-                    <button type="button" onclick="closeM('modal-account')" style="background:#cbd5e1; color:#334155;">Annuler</button>
-                    <button type="submit" class="btn-blue">Créer</button>
+                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+                    <button type="button" onclick="closeM('modal-account')" style="background:#cbd5e1; color:#334155; padding:8px 12px; border:none; border-radius:6px; font-weight:600;">Annuler</button>
+                    <button type="submit" class="btn-blue" style="padding:8px 12px; border:none; border-radius:6px; font-weight:600;">Créer</button>
                 </div>
             </form>
         </div>
@@ -145,15 +162,15 @@
                 <div class="form-group">
                     <label>Type</label>
                     <div class="grid-2">
-                        <button type="button" id="btn-exp" onclick="setT('expense')" style="background:#fef2f2; color:#ef4444; border: 2px solid #ef4444;">- Dépense</button>
-                        <button type="button" id="btn-inc" onclick="setT('income')" style="background:#f8fafc; color:#94a3b8; border: 1px solid #cbd5e1;">+ Rentrée</button>
+                        <button type="button" id="btn-exp" onclick="setT('expense')" style="padding:8px; border-radius:6px; font-weight:bold; background:#fef2f2; color:#ef4444; border: 2px solid #ef4444;">- Dépense</button>
+                        <button type="button" id="btn-inc" onclick="setT('income')" style="padding:8px; border-radius:6px; font-weight:bold; background:#f8fafc; color:#94a3b8; border: 1px solid #cbd5e1;">+ Rentrée</button>
                     </div>
                 </div>
-                <div class="form-group" style="margin-top: 8px;">
+                <div class="form-group" style="margin-top: 6px;">
                     <label>Libellé</label>
-                    <input type="text" id="tx-label" required placeholder="ex: Loyer, Salaire">
+                    <input type="text" id="tx-label" required placeholder="ex: Loyer, Courses">
                 </div>
-                <div class="grid-2" style="margin-top: 8px;">
+                <div class="grid-2" style="margin-top: 6px;">
                     <div class="form-group">
                         <label>Montant (€)</label>
                         <input type="number" step="0.01" id="tx-amount" required placeholder="0.00">
@@ -170,13 +187,13 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-group" style="margin-top: 8px;">
+                <div class="form-group" style="margin-top: 6px;">
                     <label>Compte Concerné</label>
                     <select id="tx-acc"></select>
                 </div>
-                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
-                    <button type="button" onclick="closeM('modal-tx')" style="background:#cbd5e1; color:#334155;">Annuler</button>
-                    <button type="submit" class="btn-primary">Enregistrer</button>
+                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+                    <button type="button" onclick="closeM('modal-tx')" style="background:#cbd5e1; color:#334155; padding:8px 12px; border:none; border-radius:6px; font-weight:600;">Annuler</button>
+                    <button type="submit" class="btn-primary" style="padding:8px 12px; border:none; border-radius:6px; font-weight:600;">Enregistrer</button>
                 </div>
             </form>
         </div>
@@ -191,7 +208,7 @@
                     <label>Libellé</label>
                     <input type="text" id="tr-label" required value="Virement interne">
                 </div>
-                <div class="grid-2" style="margin-top: 8px;">
+                <div class="grid-2" style="margin-top: 6px;">
                     <div class="form-group">
                         <label>De (Source -)</label>
                         <select id="tr-from"></select>
@@ -201,7 +218,7 @@
                         <select id="tr-to"></select>
                     </div>
                 </div>
-                <div class="grid-2" style="margin-top: 8px;">
+                <div class="grid-2" style="margin-top: 6px;">
                     <div class="form-group">
                         <label>Montant (€)</label>
                         <input type="number" step="0.01" id="tr-amount" required placeholder="0.00">
@@ -216,9 +233,9 @@
                         </select>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
-                    <button type="button" onclick="closeM('modal-tr')" style="background:#cbd5e1; color:#334155;">Annuler</button>
-                    <button type="submit" class="btn-blue">Effectuer</button>
+                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+                    <button type="button" onclick="closeM('modal-tr')" style="background:#cbd5e1; color:#334155; padding:8px 12px; border:none; border-radius:6px; font-weight:600;">Annuler</button>
+                    <button type="submit" class="btn-blue" style="padding:8px 12px; border:none; border-radius:6px; font-weight:600;">Effectuer</button>
                 </div>
             </form>
         </div>
@@ -239,7 +256,7 @@
         };
 
         const mults = { monthly: 12, bimonthly: 6, quarterly: 4, semiannual: 2, annual: 1, once: 1 };
-        const freqNames = { monthly: 'Mensuel', bimonthly: 'Bi-mensuel', quarterly: 'Trimestriel', semiannual: 'Semestriel', annual: 'Annuel', once: 'Ponctuel' };
+        const freqNames = { monthly: 'Mens.', bimonthly: 'Bi-m.', quarterly: 'Trim.', semiannual: 'Sem.', annual: 'An.', once: 'Ponc.' };
 
         function openM(id) { document.getElementById(id).classList.add('open'); }
         function closeM(id) { document.getElementById(id).classList.remove('open'); }
@@ -255,5 +272,180 @@
             const bE = document.getElementById('btn-exp');
             const bI = document.getElementById('btn-inc');
             if(t === 'expense') {
-                bE.style = "background:#fef2f2; color:#ef4444; border: 2px solid #ef4444;";
-                bI.style
+                bE.style = "padding:8px; border-radius:6px; font-weight:bold; background:#fef2f2; color:#ef4444; border: 2px solid #ef4444;";
+                bI.style = "padding:8px; border-radius:6px; font-weight:bold; background:#f8fafc; color:#94a3b8; border: 1px solid #cbd5e1;";
+            } else {
+                bI.style = "padding:8px; border-radius:6px; font-weight:bold; background:#ecfdf5; color:#10b981; border: 2px solid #10b981;";
+                bE.style = "padding:8px; border-radius:6px; font-weight:bold; background:#f8fafc; color:#94a3b8; border: 1px solid #cbd5e1;";
+            }
+        }
+
+        function toggleFilter(id) {
+            if (id === 'all') {
+                state.selectedAccounts = ['all'];
+            } else {
+                state.selectedAccounts = state.selectedAccounts.filter(a => a !== 'all');
+                if (state.selectedAccounts.includes(id)) {
+                    state.selectedAccounts = state.selectedAccounts.filter(a => a !== id);
+                    if (state.selectedAccounts.length === 0) state.selectedAccounts = ['all'];
+                } else {
+                    if (state.selectedAccounts.length >= 2) state.selectedAccounts.shift();
+                    state.selectedAccounts.push(id);
+                }
+            }
+            render();
+        }
+
+        function getFilteredTx() {
+            if (state.selectedAccounts.includes('all')) return state.transactions;
+            return state.transactions.filter(t => state.selectedAccounts.includes(t.accountId));
+        }
+
+        function render() {
+            // Render Filters
+            let fHtml = `<button class="filter-badge ${state.selectedAccounts.includes('all')?'active':''}" onclick="toggleFilter('all')">Tous</button>`;
+            state.accounts.forEach(a => {
+                const act = state.selectedAccounts.includes(a.id);
+                fHtml += `<button class="filter-badge ${act?'active':''}" onclick="toggleFilter('${a.id}')" style="${act?`background:${a.color};color:white`:''}">${a.name}</button>`;
+            });
+            document.getElementById('account-filters').innerHTML = fHtml;
+
+            // Render KPIs
+            let filteredAccs = state.selectedAccounts.includes('all') ? state.accounts : state.accounts.filter(a => state.selectedAccounts.includes(a.id));
+            let initBal = filteredAccs.reduce((sum, a) => sum + parseFloat(a.balance), 0);
+            let txs = getFilteredTx();
+            let inc = 0, exp = 0;
+            txs.forEach(t => {
+                let m = mults[t.frequency] || 1;
+                let tot = parseFloat(t.amount) * m;
+                if (t.type === 'income') inc += tot; else exp += tot;
+            });
+
+            document.getElementById('kpi-initial').innerText = initBal.toFixed(2) + ' €';
+            document.getElementById('kpi-income').innerText = '+' + inc.toFixed(2) + ' €';
+            document.getElementById('kpi-expense').innerText = '-' + exp.toFixed(2) + ' €';
+            let net = inc - exp;
+            let netEl = document.getElementById('kpi-net');
+            netEl.innerText = (net >= 0 ? '+' : '') + net.toFixed(2) + ' €';
+            netEl.style.color = net >= 0 ? '#4f46e5' : '#ef4444';
+
+            // Render Transactions
+            document.getElementById('tx-count').innerText = txs.length;
+            const tbody = document.getElementById('tx-rows');
+            if (txs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding: 12px;">Aucune opération.</td></tr>`;
+            } else {
+                tbody.innerHTML = txs.map(t => {
+                    const acc = state.accounts.find(a => a.id === t.accountId);
+                    const isInc = t.type === 'income';
+                    return `
+                        <tr>
+                            <td style="font-weight:600;">${isInc ? '🟢' : '🔴'} ${t.label}</td>
+                            <td style="font-size:11px; color:#64748b;">${freqNames[t.frequency]}</td>
+                            <td><span style="background:${acc?.color||'#64748b'}; color:white; padding: 2px 4px; border-radius:3px; font-size:10px;">${acc?.name||'N/A'}</span></td>
+                            <td style="text-align:right; font-weight:bold; color:${isInc?'#10b981':'#ef4444'}">${isInc?'+':'-'}${parseFloat(t.amount).toFixed(2)}€</td>
+                            <td style="text-align:center;"><button onclick="deleteTx('${t.id}')" class="btn-danger" style="padding:1px 5px; font-size:10px; border:none; border-radius:3px;">X</button></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Render Accounts
+            document.getElementById('acc-list').innerHTML = state.accounts.map(a => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding: 6px 10px; background:#f8fafc; border-radius:6px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="width:8px; height:8px; border-radius:50%; background:${a.color}; display:inline-block;"></span>
+                        <strong style="font-size:12px;">${a.name}</strong>
+                    </div>
+                    <div>
+                        <span style="font-weight:bold; font-size:12px; margin-right:6px;">${parseFloat(a.balance).toFixed(2)} €</span>
+                        <button onclick="deleteAcc('${a.id}')" style="background:none; border:none; color:#ef4444; font-size:11px;">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Update Selects
+            const opts = state.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+            document.getElementById('tx-acc').innerHTML = opts;
+            document.getElementById('tr-from').innerHTML = opts;
+            document.getElementById('tr-to').innerHTML = opts;
+        }
+
+        function saveAccount(e) {
+            e.preventDefault();
+            state.accounts.push({
+                id: 'acc_' + Date.now(),
+                name: document.getElementById('acc-name').value,
+                balance: parseFloat(document.getElementById('acc-balance').value),
+                color: document.getElementById('acc-color').value
+            });
+            saveState();
+            closeM('modal-account');
+        }
+
+        function saveTx(e) {
+            e.preventDefault();
+            state.transactions.push({
+                id: 'tx_' + Date.now(),
+                type: state.currentType,
+                label: document.getElementById('tx-label').value,
+                amount: parseFloat(document.getElementById('tx-amount').value),
+                frequency: document.getElementById('tx-freq').value,
+                accountId: document.getElementById('tx-acc').value
+            });
+            saveState();
+            closeM('modal-tx');
+        }
+
+        function saveTr(e) {
+            e.preventDefault();
+            const fromId = document.getElementById('tr-from').value;
+            const toId = document.getElementById('tr-to').value;
+            const amount = parseFloat(document.getElementById('tr-amount').value);
+            const freq = document.getElementById('tr-freq').value;
+            const label = document.getElementById('tr-label').value;
+
+            if(fromId === toId) { alert("Choisissez deux comptes différents."); return; }
+
+            state.transactions.push({ id: 'tx_'+Date.now()+'_1', type: 'expense', label: `[Virement vers ${state.accounts.find(a=>a.id===toId)?.name}] ${label}`, amount, frequency: freq, accountId: fromId });
+            state.transactions.push({ id: 'tx_'+Date.now()+'_2', type: 'income', label: `[Virement depuis ${state.accounts.find(a=>a.id===fromId)?.name}] ${label}`, amount, frequency: freq, accountId: toId });
+            saveState();
+            closeM('modal-tr');
+        }
+
+        function deleteTx(id) { state.transactions = state.transactions.filter(t => t.id !== id); saveState(); }
+        function deleteAcc(id) {
+            if(state.accounts.length <= 1) { alert("Conservez au moins un compte."); return; }
+            state.accounts = state.accounts.filter(a => a.id !== id);
+            state.transactions = state.transactions.filter(t => t.accountId !== id);
+            saveState();
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", "moneyTime_backup.json");
+            dl.click();
+        }
+
+        function importData(e) {
+            const fr = new FileReader();
+            fr.onload = function(evt) {
+                try {
+                    const p = JSON.parse(evt.target.result);
+                    if(p.accounts && p.transactions) {
+                        state.accounts = p.accounts;
+                        state.transactions = p.transactions;
+                        saveState();
+                        alert("Données importées !");
+                    }
+                } catch(err) { alert("Fichier invalide."); }
+            };
+            fr.readAsText(e.target.files[0]);
+        }
+
+        render();
+    </script>
+</body>
+</html>
